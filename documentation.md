@@ -17,7 +17,7 @@ NameGeneratorApp/ </br>
 
 ## Классы и методы
 ### Основные поля класса
-```
+```Markdown
 private List<String> names = new ArrayList<>();       // Список имен
 private List<String> nicknames = new ArrayList<>();   // Список псевдонимов
 private LinkedList<String> lastPhrases = new LinkedList<>(); // История фраз
