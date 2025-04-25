@@ -7,8 +7,10 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Random;
+import java.util.Set;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -17,8 +19,9 @@ import org.json.simple.parser.ParseException;
 public class NameGeneratorApp {
     private java.util.List<String> names = new ArrayList<>();
     private java.util.List<String> nicknames = new ArrayList<>();
-    private LinkedList<String> lastPhrases = new LinkedList<>();
+    private Set<String> generatedPhrases = new LinkedHashSet<>(); // Для хранения уникальных фраз с сохранением порядка
     private final String DATA_FILE = "data.json";
+    private final String PHRASES_FILE = "phrases.json";
     private Random random = new Random();
 
     private JFrame frame;
@@ -38,10 +41,11 @@ public class NameGeneratorApp {
 
     private void initialize() throws Exception {
         loadData();
+        loadPhrases();
 
         frame = new JFrame("Генератор имен и псевдонимов");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(450, 500);
+        frame.setSize(450, 550);
         frame.setLayout(new BorderLayout());
 
         JPanel resultPanel = new JPanel(new BorderLayout());
@@ -80,8 +84,11 @@ public class NameGeneratorApp {
             }
         });
 
-        JButton lastPhrasesButton = createStyledButton("Последние фразы");
-        lastPhrasesButton.addActionListener(e -> showLastPhrases());
+        JButton viewPhrasesButton = createStyledButton("Просмотреть все фразы");
+        viewPhrasesButton.addActionListener(e -> showAllPhrases());
+
+        JButton clearPhrasesButton = createStyledButton("Очистить список фраз");
+        clearPhrasesButton.addActionListener(e -> clearPhrases());
 
         JButton exitButton = createStyledButton("Выход");
         exitButton.addActionListener(e -> System.exit(0));
@@ -93,7 +100,9 @@ public class NameGeneratorApp {
         buttonPanel.add(Box.createVerticalStrut(15));
         buttonPanel.add(viewWordsButton);
         buttonPanel.add(Box.createVerticalStrut(15));
-        buttonPanel.add(lastPhrasesButton);
+        buttonPanel.add(viewPhrasesButton);
+        buttonPanel.add(Box.createVerticalStrut(15));
+        buttonPanel.add(clearPhrasesButton);
         buttonPanel.add(Box.createVerticalStrut(15));
         buttonPanel.add(exitButton);
 
@@ -156,14 +165,6 @@ public class NameGeneratorApp {
                         this.nicknames.add(item.toString());
                     }
                 }
-
-                if (json.containsKey("lastPhrases")) {
-                    JSONArray phrasesArray = (JSONArray) json.get("lastPhrases");
-                    this.lastPhrases = new LinkedList<>();
-                    for (Object item : phrasesArray) {
-                        this.lastPhrases.add(item.toString());
-                    }
-                }
             } catch (IOException | ParseException e) {
                 System.err.println("Ошибка загрузки файла данных: " + e.getMessage());
                 initializeDefaultData();
@@ -175,10 +176,35 @@ public class NameGeneratorApp {
         }
     }
 
+    private void loadPhrases() throws Exception {
+        File file = new File(PHRASES_FILE);
+        if (file.exists()) {
+            try {
+                String content = new String(Files.readAllBytes(file.toPath()));
+                JSONParser parser = new JSONParser();
+                JSONObject json = (JSONObject) parser.parse(content);
+
+                if (json.containsKey("generatedPhrases")) {
+                    JSONArray phrasesArray = (JSONArray) json.get("generatedPhrases");
+                    this.generatedPhrases = new LinkedHashSet<>();
+                    for (Object item : phrasesArray) {
+                        this.generatedPhrases.add(item.toString());
+                    }
+                }
+            } catch (IOException | ParseException e) {
+                System.err.println("Ошибка загрузки файла фраз: " + e.getMessage());
+                this.generatedPhrases = new LinkedHashSet<>();
+                savePhrases();
+            }
+        } else {
+            this.generatedPhrases = new LinkedHashSet<>();
+            savePhrases();
+        }
+    }
+
     private void initializeDefaultData() {
         this.names = new ArrayList<>(Arrays.asList("Александр", "Мария", "Дмитрий"));
         this.nicknames = new ArrayList<>(Arrays.asList("Грозный", "Великий", "Мудрый"));
-        this.lastPhrases = new LinkedList<>();
     }
 
     private void saveData() throws Exception {
@@ -192,44 +218,19 @@ public class NameGeneratorApp {
         nicknamesArray.addAll(this.nicknames);
         json.put("nicknames", nicknamesArray);
 
-        JSONArray phrasesArray = new JSONArray();
-        phrasesArray.addAll(this.lastPhrases);
-        json.put("lastPhrases", phrasesArray);
-
         try (FileWriter writer = new FileWriter(DATA_FILE)) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("{\n");
+            writer.write(json.toJSONString());
+        }
+    }
 
-            sb.append("  \"names\": [\n");
-            for (int i = 0; i < namesArray.size(); i++) {
-                sb.append("    \"").append(namesArray.get(i)).append("\"");
-                if (i < namesArray.size() - 1)
-                    sb.append(",");
-                sb.append("\n");
-            }
-            sb.append("  ],\n");
+    private void savePhrases() throws Exception {
+        JSONObject json = new JSONObject();
+        JSONArray phrasesArray = new JSONArray();
+        phrasesArray.addAll(this.generatedPhrases);
+        json.put("generatedPhrases", phrasesArray);
 
-            sb.append("  \"nicknames\": [\n");
-            for (int i = 0; i < nicknamesArray.size(); i++) {
-                sb.append("    \"").append(nicknamesArray.get(i)).append("\"");
-                if (i < nicknamesArray.size() - 1)
-                    sb.append(",");
-                sb.append("\n");
-            }
-            sb.append("  ],\n");
-
-            sb.append("  \"lastPhrases\": [\n");
-            for (int i = 0; i < phrasesArray.size(); i++) {
-                sb.append("    \"").append(phrasesArray.get(i)).append("\"");
-                if (i < phrasesArray.size() - 1)
-                    sb.append(",");
-                sb.append("\n");
-            }
-            sb.append("  ]\n");
-
-            sb.append("}");
-
-            writer.write(sb.toString());
+        try (FileWriter writer = new FileWriter(PHRASES_FILE)) {
+            writer.write(json.toJSONString());
         }
     }
 
@@ -245,20 +246,71 @@ public class NameGeneratorApp {
 
         resultLabel.setText(phrase);
 
-        this.lastPhrases.addFirst(phrase);
-        if (this.lastPhrases.size() > 20) {
-            this.lastPhrases.removeLast();
-        }
-
-        try {
-            saveData();
-        } catch (Exception e) {
-            e.printStackTrace();
-            JOptionPane.showMessageDialog(frame, "Ошибка сохранения данных",
-                    "Ошибка", JOptionPane.ERROR_MESSAGE);
+        if (!this.generatedPhrases.contains(phrase)) {
+            this.generatedPhrases.add(phrase);
+            try {
+                savePhrases();
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Ошибка сохранения фраз",
+                        "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
         }
     }
 
+    private void clearPhrases() {
+        int confirm = JOptionPane.showConfirmDialog(frame,
+                "Вы уверены, что хотите очистить список всех фраз?",
+                "Подтверждение очистки", JOptionPane.YES_NO_OPTION);
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            this.generatedPhrases.clear();
+            try {
+                savePhrases();
+                JOptionPane.showMessageDialog(frame, "Список всех фраз очищен",
+                        "Успех", JOptionPane.INFORMATION_MESSAGE);
+            } catch (Exception e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(frame, "Ошибка сохранения",
+                        "Ошибка", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    private void showAllPhrases() {
+        if (this.generatedPhrases.isEmpty()) {
+            JOptionPane.showMessageDialog(frame, "Нет сохраненных фраз",
+                    "Информация", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        JDialog dialog = new JDialog(frame, "Все сгенерированные фразы", true);
+        dialog.setLayout(new BorderLayout());
+        dialog.setSize(500, 400);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        for (String phrase : this.generatedPhrases) {
+            listModel.addElement(phrase);
+        }
+
+        JList<String> phrasesList = new JList<>(listModel);
+        phrasesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        JScrollPane scrollPane = new JScrollPane(phrasesList);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        JButton closeButton = new JButton("Закрыть");
+        closeButton.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        buttonPanel.add(closeButton);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setLocationRelativeTo(frame);
+        dialog.setVisible(true);
+    }
+
+    // Остальные методы остаются без изменений
     private void openAddWordsDialog() {
         JDialog dialog = new JDialog(frame, "Добавить слова", true);
         dialog.setLayout(new BorderLayout());
@@ -320,39 +372,6 @@ public class NameGeneratorApp {
         mainPanel.add(buttonPanel, BorderLayout.SOUTH);
 
         dialog.add(mainPanel, BorderLayout.CENTER);
-        dialog.setLocationRelativeTo(frame);
-        dialog.setVisible(true);
-    }
-
-    private void showLastPhrases() {
-        if (this.lastPhrases.isEmpty()) {
-            JOptionPane.showMessageDialog(frame, "Нет сохраненных фраз",
-                    "Информация", JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        JDialog dialog = new JDialog(frame, "Последние 20 фраз", true);
-        dialog.setLayout(new BorderLayout());
-        dialog.setSize(400, 300);
-
-        DefaultListModel<String> listModel = new DefaultListModel<>();
-        for (String phrase : this.lastPhrases) {
-            listModel.addElement(phrase);
-        }
-
-        JList<String> phrasesList = new JList<>(listModel);
-        phrasesList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        JScrollPane scrollPane = new JScrollPane(phrasesList);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-        dialog.add(scrollPane, BorderLayout.CENTER);
-
-        JButton closeButton = new JButton("Закрыть");
-        closeButton.addActionListener(e -> dialog.dispose());
-        JPanel buttonPanel = new JPanel();
-        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
-        buttonPanel.add(closeButton);
-        dialog.add(buttonPanel, BorderLayout.SOUTH);
-
         dialog.setLocationRelativeTo(frame);
         dialog.setVisible(true);
     }
