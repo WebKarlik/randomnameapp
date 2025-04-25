@@ -8,9 +8,21 @@
 - Сохранять историю последних сгенерированных фраз
 
 ## Структура проекта
-NameGeneratorApp/
-├── src/
-│   └── NameGeneratorApp.java  # Главный класс приложения
-├── lib/
-│   └── json-simple-1.1.1.jar  # Библиотека для работы с JSON
-└── data.json                  # Файл с данными (создается автоматически)
+NameGeneratorApp/ </br>
+├── src/ </br>
+│   └── NameGeneratorApp.java  # Главный класс приложения </br>
+├── lib/ </br>
+│   └── json-simple-1.1.1.jar  # Библиотека для работы с JSON </br>
+└── data.json                  # Файл с данными (создается автоматически) </br>
+
+## Классы и методы
+### Основные поля класса
+```
+private List<String> names = new ArrayList<>();       // Список имен
+private List<String> nicknames = new ArrayList<>();   // Список псевдонимов
+private LinkedList<String> lastPhrases = new LinkedList<>(); // История фраз
+private final String DATA_FILE = "data.json";         // Файл для хранения данных
+private Random random = new Random();                 // Генератор случайных чисел
+private JFrame frame;                                // Главное окно приложения
+private JLabel resultLabel;                          // Метка для отображения результата
+```
