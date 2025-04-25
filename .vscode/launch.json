@@ -1,0 +1,15 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "type": "java",
+        "name": "Launch NameGeneratorApp",
+        "request": "launch",
+        "mainClass": "NameGeneratorApp",
+        "classPaths": [
+          "${workspaceFolder}/lib/json-simple-1.1.1.jar",
+          "${workspaceFolder}/bin"
+        ]
+      }
+    ]
+  }
