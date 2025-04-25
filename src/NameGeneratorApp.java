@@ -209,17 +209,40 @@ public class NameGeneratorApp {
 
     private void saveData() throws Exception {
         JSONObject json = new JSONObject();
-
+    
         JSONArray namesArray = new JSONArray();
         namesArray.addAll(this.names);
         json.put("names", namesArray);
-
+    
         JSONArray nicknamesArray = new JSONArray();
         nicknamesArray.addAll(this.nicknames);
         json.put("nicknames", nicknamesArray);
-
+    
         try (FileWriter writer = new FileWriter(DATA_FILE)) {
-            writer.write(json.toJSONString());
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\n");
+            
+            // Сохраняем имена в столбик
+            sb.append("  \"names\": [\n");
+            for (int i = 0; i < namesArray.size(); i++) {
+                sb.append("    \"").append(namesArray.get(i)).append("\"");
+                if (i < namesArray.size() - 1) sb.append(",");
+                sb.append("\n");
+            }
+            sb.append("  ],\n");
+            
+            // Сохраняем псевдонимы в столбик
+            sb.append("  \"nicknames\": [\n");
+            for (int i = 0; i < nicknamesArray.size(); i++) {
+                sb.append("    \"").append(nicknamesArray.get(i)).append("\"");
+                if (i < nicknamesArray.size() - 1) sb.append(",");
+                sb.append("\n");
+            }
+            sb.append("  ]\n");
+            
+            sb.append("}");
+            
+            writer.write(sb.toString());
         }
     }
 
@@ -228,9 +251,23 @@ public class NameGeneratorApp {
         JSONArray phrasesArray = new JSONArray();
         phrasesArray.addAll(this.generatedPhrases);
         json.put("generatedPhrases", phrasesArray);
-
+    
         try (FileWriter writer = new FileWriter(PHRASES_FILE)) {
-            writer.write(json.toJSONString());
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\n");
+            
+            sb.append("  \"generatedPhrases\": [\n");
+            int count = 0;
+            for (String phrase : this.generatedPhrases) {
+                sb.append("    \"").append(phrase).append("\"");
+                if (count++ < this.generatedPhrases.size() - 1) sb.append(",");
+                sb.append("\n");
+            }
+            sb.append("  ]\n");
+            
+            sb.append("}");
+            
+            writer.write(sb.toString());
         }
     }
 
