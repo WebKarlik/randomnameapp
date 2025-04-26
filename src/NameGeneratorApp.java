@@ -7,7 +7,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Random;
 import java.util.Set;
@@ -19,7 +18,7 @@ import org.json.simple.parser.ParseException;
 public class NameGeneratorApp {
     private java.util.List<String> names = new ArrayList<>();
     private java.util.List<String> nicknames = new ArrayList<>();
-    private Set<String> generatedPhrases = new LinkedHashSet<>(); // Для хранения уникальных фраз с сохранением порядка
+    private Set<String> generatedPhrases = new LinkedHashSet<>();
     private final String DATA_FILE = "data.json";
     private final String PHRASES_FILE = "phrases.json";
     private Random random = new Random();
@@ -209,39 +208,39 @@ public class NameGeneratorApp {
 
     private void saveData() throws Exception {
         JSONObject json = new JSONObject();
-    
+
         JSONArray namesArray = new JSONArray();
         namesArray.addAll(this.names);
         json.put("names", namesArray);
-    
+
         JSONArray nicknamesArray = new JSONArray();
         nicknamesArray.addAll(this.nicknames);
         json.put("nicknames", nicknamesArray);
-    
+
         try (FileWriter writer = new FileWriter(DATA_FILE)) {
             StringBuilder sb = new StringBuilder();
             sb.append("{\n");
-            
-            // Сохраняем имена в столбик
+
             sb.append("  \"names\": [\n");
             for (int i = 0; i < namesArray.size(); i++) {
                 sb.append("    \"").append(namesArray.get(i)).append("\"");
-                if (i < namesArray.size() - 1) sb.append(",");
+                if (i < namesArray.size() - 1)
+                    sb.append(",");
                 sb.append("\n");
             }
             sb.append("  ],\n");
-            
-            // Сохраняем псевдонимы в столбик
+
             sb.append("  \"nicknames\": [\n");
             for (int i = 0; i < nicknamesArray.size(); i++) {
                 sb.append("    \"").append(nicknamesArray.get(i)).append("\"");
-                if (i < nicknamesArray.size() - 1) sb.append(",");
+                if (i < nicknamesArray.size() - 1)
+                    sb.append(",");
                 sb.append("\n");
             }
             sb.append("  ]\n");
-            
+
             sb.append("}");
-            
+
             writer.write(sb.toString());
         }
     }
@@ -251,22 +250,23 @@ public class NameGeneratorApp {
         JSONArray phrasesArray = new JSONArray();
         phrasesArray.addAll(this.generatedPhrases);
         json.put("generatedPhrases", phrasesArray);
-    
+
         try (FileWriter writer = new FileWriter(PHRASES_FILE)) {
             StringBuilder sb = new StringBuilder();
             sb.append("{\n");
-            
+
             sb.append("  \"generatedPhrases\": [\n");
             int count = 0;
             for (String phrase : this.generatedPhrases) {
                 sb.append("    \"").append(phrase).append("\"");
-                if (count++ < this.generatedPhrases.size() - 1) sb.append(",");
+                if (count++ < this.generatedPhrases.size() - 1)
+                    sb.append(",");
                 sb.append("\n");
             }
             sb.append("  ]\n");
-            
+
             sb.append("}");
-            
+
             writer.write(sb.toString());
         }
     }
@@ -347,7 +347,6 @@ public class NameGeneratorApp {
         dialog.setVisible(true);
     }
 
-    // Остальные методы остаются без изменений
     private void openAddWordsDialog() {
         JDialog dialog = new JDialog(frame, "Добавить слова", true);
         dialog.setLayout(new BorderLayout());
